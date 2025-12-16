@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import torch
 from ptflops import get_model_complexity_info
 from torch.nn import MSELoss
@@ -22,12 +23,11 @@ class Trainer(object):
 
         self.data_length = len(self.data_loader)
 
-        summary(self.model, input_size=(1, 19, 30, 200))
-
-        macs, params = get_model_complexity_info(self.model, (19, 30, 200), as_strings=True,
-                                                 print_per_layer_stat=True, verbose=True)
-        print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
-        print('{:<30}  {:<8}'.format('Number of parameters: ', params))
+        # summary(self.model, input_size=(1, 19, 30, 200))
+        # macs, params = get_model_complexity_info(self.model, (19, 30, 200), as_strings=True,
+        #                                          print_per_layer_stat=True, verbose=True)
+        # print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+        # print('{:<30}  {:<8}'.format('Number of parameters: ', params))
 
         self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.params.lr,
                                            weight_decay=self.params.weight_decay)
@@ -61,7 +61,8 @@ class Trainer(object):
             losses = []
             for x in tqdm(self.data_loader, mininterval=10):
                 self.optimizer.zero_grad()
-                x = x.to(self.device)/100
+                # x = x.to(self.device)/100
+                x = x["global_crops"].permute(0, 2, 3, 1).to(self.device)  # (B, T, C, N) -> (B, C, N, T)
                 if self.params.need_mask:
                     bz, ch_num, patch_num, patch_size = x.shape
                     mask = generate_mask(
@@ -89,6 +90,7 @@ class Trainer(object):
             learning_rate = self.optimizer.state_dict()['param_groups'][0]['lr']
             print(f'Epoch {epoch+1}: Training Loss: {mean_loss:.6f}, Learning Rate: {learning_rate:.6f}')
             if  mean_loss < best_loss:
+                os.makedirs(self.params.model_dir, exist_ok=True)
                 model_path = rf'{self.params.model_dir}/epoch{epoch+1}_loss{mean_loss}.pth'
                 torch.save(self.model.state_dict(), model_path)
                 print("model save in " + model_path)

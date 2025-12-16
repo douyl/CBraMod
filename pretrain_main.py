@@ -20,7 +20,7 @@ def setup_seed(seed):
 def main():
     parser = argparse.ArgumentParser(description='EEG Foundation Model')
     parser.add_argument('--seed', type=int, default=42, help='random seed (default: 0)')
-    parser.add_argument('--cuda', type=int, default=3, help='cuda number (default: 1)')
+    parser.add_argument('--cuda', type=int, default=0, help='cuda number (default: 1)')
     parser.add_argument('--parallel', type=bool, default=False, help='parallel')
     parser.add_argument('--epochs', type=int, default=40, help='number of epochs (default: 5)')
     parser.add_argument('--batch_size', type=int, default=128, help='batch size for training (default: 32)')
@@ -32,9 +32,9 @@ def main():
 
     # parser.add_argument('--project_mode', type=str, default='cnn', help='project_mode')
     parser.add_argument('--dropout', type=float, default=0.1, help='dropout')
-    parser.add_argument('--in_dim', type=int, default=200, help='in_dim')
-    parser.add_argument('--out_dim', type=int, default=200, help='out_dim')
-    parser.add_argument('--d_model', type=int, default=200, help='d_model')
+    parser.add_argument('--in_dim', type=int, default=250, help='in_dim')
+    parser.add_argument('--out_dim', type=int, default=250, help='out_dim')
+    parser.add_argument('--d_model', type=int, default=256, help='d_model')
     parser.add_argument('--dim_feedforward', type=int, default=800, help='dim_feedforward')
     parser.add_argument('--seq_len', type=int, default=30, help='seq_len')
     parser.add_argument('--n_layer', type=int, default=12, help='n_layer')
@@ -42,13 +42,12 @@ def main():
     parser.add_argument('--need_mask', type=bool, default=True, help='need_mask')
     parser.add_argument('--mask_ratio', type=float, default=0.5, help='mask_ratio')
 
-    parser.add_argument('--dataset_dir', type=str, default='dataset_dir',
-                        help='dataset_dir')
-    parser.add_argument('--model_dir',   type=str,   default='model_dir', help='model_dir')
+    parser.add_argument('--dataset_dir', type=str, default='./samples', help='dataset_dir')
+    parser.add_argument('--model_dir', type=str, default='./experiments', help='model_dir')
     params = parser.parse_args()
     print(params)
     setup_seed(params.seed)
-    pretrained_dataset = PretrainingDataset(dataset_dir=params.dataset_dir)
+    pretrained_dataset = PretrainingDataset(data_root=params.dataset_dir)
     print(len(pretrained_dataset))
     data_loader = DataLoader(
         pretrained_dataset,
